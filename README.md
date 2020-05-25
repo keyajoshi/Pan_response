@@ -17,7 +17,7 @@ There is no ideal method for estimating Rt during a period when it is changing o
 
 In the original analysis, Pan et al. did not lag Cori et al by the mean incubation period. We have updated the figure to include a shifted version of the R(t) of Cori/Pan et al., lagged by the mean incubation period since the Cori method is designed for time of infection and this curve is symptom onset.
 
-![](figures/fig1_panfig4_recreate_2.png)Figure 1 (A) Digitized data from eFigure 1 of <sup>1</sup>. (B) Recreation of Fig. 1 R(t) analysis of 1 from the digitized data using the same method (looking backward in time) as the authors <sup>4</sup> , comparison with an analysis using the (forward-looking) method of <sup>5</sup>, and shifted estimate of <sup>4</sup>, by the mean incubation period since the Cori method is designed for time of infections and this curve is symptom onset. Vertical dashed lines show the first day in which each method estimated R(t) &lt;1.
+![](figures/fig1_panfig4_recreate_2.PNG)Figure 1 (A) Digitized data from eFigure 1 of <sup>1</sup>. (B) Recreation of Fig. 1 R(t) analysis of 1 from the digitized data using the same method (looking backward in time) as the authors <sup>4</sup> , comparison with an analysis using the (forward-looking) method of <sup>5</sup>, and shifted estimate of <sup>4</sup>, by the mean incubation period since the Cori method is designed for time of infections and this curve is symptom onset. Vertical dashed lines show the first day in which each method estimated R(t) &lt;1.
 
 ### REFERENCES
 

@@ -14,13 +14,17 @@ output:
 
 In a recent paper in JAMA, Pan et al. analyze Covid-19 transmission in Wuhan, China during progressive imposition of control measures <sup>1</sup>. They find that the daily reproduction number R(t) remained above 1 throughout the first 3 periods of control (through Feb. 2) and fell below 1 only during the fourth period (on Feb. 6), during which involuntary centralized quarantine and isolation were imposed. They argue that control measures short of involuntary quarantine were inadequate: “However, despite these interventions, the confirmed case rate continued to increase in the third period.” This finding is questionable on its face (confirmed cases trended smoothly downward from onset date January 26 onward apart from an unexplained spike on Feb. 1, eFig. 1 of <sup>1</sup>) and is questioned by the accompanying editorial: “it is difficult to assert that additional interventions in periods 4 and 5 were necessary in driving Rt below 1.0” <sup>2</sup>. Nonetheless, leading voices have cited the findings as strong support for a policy even in the United States of involuntary family separation to enforce such quarantine and isolation <sup>3/<sup>.
 
-The inference that infection rates continued to grow in period three (R(t)>1) and shrink only in period four (R(t)<1) depends strongly on Pan et al.’s use of an estimator for R(t) that was not designed for this purpose. The approach of Cori et al. <sup>4</sup> is by design backward-looking: it uses only data from up to the date on which the estimate is centered to calculate a reproduction number. Thus the estimates of R(t) during the third period are completely determined by the past trend, and if (as an extreme example), case numbers had abruptly dropped to zero on February 2, indicating that control measures prior to February 2 were completely effective, the estimates of R(t) up to February 2 would have been unaffected. An alternative approach, sometimes referred to as the “case reproduction number,” estimates instantaneous reproduction numbers for each day 5 based on past, present, and future cases. 
+The inference that infection rates continued to grow in period three (R(t)>1) and shrink only in period four (R(t)<1) depends strongly on Pan et al.’s use of an estimator for R(t) that was not designed for this purpose. The approach of Cori et al. <sup>4</sup> is by design backward-looking: it uses only data from up to the date on which the estimate is centered to calculate a reproduction number. Thus the estimates of R(t) during the third period are completely determined by the past trend, and if (as an extreme example), case numbers had abruptly dropped to zero on February 2, indicating that control measures prior to February 2 were completely effective, the estimates of R(t) up to February 2 would have been unaffected. An alternative approach, sometimes referred to as the “case reproduction number,” estimates instantaneous reproduction numbers for each day <sup>5</sup> based on past, present, and future cases. 
 
 We requested the raw counts from eFigure 1 from a corresponding author (X Lin) but were told they were not available. We therefore digitized the figure using WebPlotDigitizer version 4.2 (https://automeris.io/WebPlotDigitizer), replicated the paper’s analysis using the method of Cori et al. <sup>4</sup>, and compared the results against those from the alternative method of <sup>5</sup>. Using the Cori method as Pan et al. did, our curve closely follows Fig. 4 of 1 when using the same method. As anticipated, the alternative approach, taking into account the evident decline of the epidemic curve that began during Period 3, finds that Rt dropped below 1 during Period 3, specifically on 28-29 Jan. (Fig. 1)
 
-There is no ideal method for estimating Rt during a period when it is changing on a time scale equal to or faster than the serial interval of the infection. In this particular case, a few days’ difference in the timing of when Rt dropped below 1 leads to divergent policy interpretations. We believe that a purely backward-looking method like that used by the authors inevitably finds too late a date in such a situation because it cannot account for drops in future case numbers, while the method of <sup>5</sup> may be influenced to some degree by future changes in transmission. We are currently studying the performance of these different approaches to detect timing of Rt<1. Meanwhile, caution in interpretation is warranted. In particular it is not clear, as Hartley and Perencevich note <sup>2</sup>, that the extreme and invasive measures begun after February 2 were necessary to control transmission in Wuhan, or how this would generalize to other settings.
+There is no ideal method for estimating Rt during a period when it is changing on a time scale equal to or faster than the serial interval of the infection. In this particular case, a few days’ difference in the timing of when Rt dropped below 1 leads to divergent policy interpretations. We believe that a purely backward-looking method like that used by the authors inevitably finds too late a date in such a situation because it cannot account for drops in future case numbers, while the method of <sup>5</sup> is influenced to some degree by future changes in transmission. We are currently studying the performance of these different approaches to detect timing of Rt<1. Meanwhile, caution in interpretation is warranted. In particular it is not clear, as Hartley and Perencevich note <sup>2</sup>, that the extreme and invasive measures begun after February 2 were necessary to control transmission in Wuhan, or how this would generalize to other settings.
 
-![](figures/fig1_panfig4_recreate.png)Figure 1 (A) Digitized data from eFigure 1 of <sup>1</sup>. (B) Recreation of Fig. 1 R(t) analysis of  1 from the digitized data using the same method (looking backward in time) as the authors <sup>4</sup> and comparison with an analysis using the (forward-looking) method of <sup>5</sup>. Vertical dashed lines show the first day in which each method estimated R(t) <1. 
+### Update:
+In the original analysis, Pan et al. did not lag Cori et al by the mean incubation period. We have updated the figure to include a shifted version of the R(t) of Cori/Pan et al., lagged by the mean incubation period since the Cori method is designed for time of infection and this curve is symptom onset. 
+
+
+![](figures/fig1_panfig4_recreate_2.png)Figure 1 (A) Digitized data from eFigure 1 of <sup>1</sup>. (B) Recreation of Fig. 1 R(t) analysis of  1 from the digitized data using the same method (looking backward in time) as the authors <sup>4</sup> , comparison with an analysis using the (forward-looking) method of <sup>5</sup>, and shifted estimate of <sup>4</sup>, by the mean incubation period since the Cori method is designed for time of infections and this curve is symptom onset. Vertical dashed lines show the first day in which each method estimated R(t) <1. 
 
 ### REFERENCES
 
@@ -37,3 +41,184 @@ There is no ideal method for estimating Rt during a period when it is changing o
 
 
 5. Wallinga J, Teunis P. Different epidemic curves for severe acute respiratory syndrome reveal similar impacts of control measures. Am J Epidemiol. 2004;160(6):509-516.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, error = FALSE, message = FALSE)
+```
+
+```{r}
+### Download packages ###
+library(tidyverse)
+library(lubridate)
+library(EpiEstim)
+library(ggpubr)
+
+### Read in data ###
+
+ec <- read.csv("data/lcc_dec8mar8.csv", header=FALSE) %>% 
+  rename("date"="V1", "cases"="V2") %>% 
+  mutate(date=as.Date(date, format="%m/%d/%Y")) %>% 
+  right_join(data.frame(date=seq(from=as.Date("2019-12-08"), 
+                                 to=as.Date("2020-03-08"), by=1)), by="date") %>% 
+  mutate(cases=replace_na(cases,0))
+
+ec$time <- c(1:nrow(ec))
+```
+
+```{r}
+### Estimate R ### 
+
+### Set up prior to feeding into epiestim package ### 
+ec2 <- ec %>% mutate(I=round(cases)) ## round cases to whole # 
+
+t <- nrow(ec2)
+t_Cori <- seq(2, t-4) # starting at 2 as conditional on the past observations 
+## (throws error if you don't start from 2)
+
+t_WT <- seq(1, t-4)
+
+
+## Cori method
+## curve to replicate Pan et.als conclusions 
+## NOT shifted by incubation period 
+epiestim_results <- estimate_R(incid=ec2$I,
+                               method="parametric_si",
+                               config= make_config(list(mean_si = 7.5, 
+                                                        std_si = 3.4,
+                                                        t_start = t_Cori, 
+                                                        t_end = t_Cori+4)))
+
+## combine results with ec2 df, mean and 2.5, 97.5% quantiles of Cori method 
+ec2 <- ec2 %>% 
+  left_join(epiestim_results$R %>%
+              dplyr::select(t_end, 
+                            R_Cori=`Mean(R)`, 
+                            R_Cori_q025=`Quantile.0.025(R)`, 
+                            R_Cori_q975=`Quantile.0.975(R)`),
+            by=c("time"="t_end"))
+
+
+## WT method 
+epiestim_results_WT <- wallinga_teunis(incid=ec2$I,
+                                       method="parametric_si",
+                                       config= make_config(list(mean_si = 7.5, 
+                                                                std_si = 3.4,
+                                                                t_start = t_WT, 
+                                                                t_end = t_WT+4)))
+
+## combine results with ec2 df, mean and 2.5, 97.5% quantiles of WT method 
+ec2 <- ec2 %>% 
+  left_join(epiestim_results_WT$R %>%
+              dplyr::select(t_end, 
+                            R_WT=`Mean(R)`, 
+                            R_WT_q025=`Quantile.0.025(R)`, 
+                            R_WT_q975=`Quantile.0.975(R)`),
+            by=c("time"="t_end"))
+```
+
+```{r, eval = F}
+### Original Plot ### 
+### includes the Cori/Pan estimate (unshifted)
+### and the WT estimate
+
+
+### Plot results ### 
+ec3 <- ec2
+ec3[which(ec3$date<"2020-01-01"), c("R_Cori", 
+                                    "R_Cori_q025", 
+                                    "R_Cori_q975", 
+                                    "R_WT", 
+                                    "R_WT_q025", 
+                                    "R_WT_q975")] <- NA
+
+fig.inc <- ggplot(data=ec3, 
+                  aes(x=date, y=I)) +
+  geom_bar(stat="identity") +
+  scale_x_date("Date of Symptom Onset", 
+               breaks=seq(as.Date("2019-12-20"), 
+                          as.Date("2020-03-08"), 
+                          by=5), 
+               limits=c(as.Date("2019-12-20"), 
+                        as.Date("2020-03-08")),
+               date_labels="%b %d") +
+  labs(y="Cases") +
+  theme_bw() +
+  theme(axis.title=element_text(size=13)) 
+
+fig.R <- ec3 %>% ggplot() +
+  geom_vline(xintercept=as.Date(c("2020-01-01", "2020-01-10", "2020-01-23", "2020-02-02", "2020-02-17")),
+             color="grey30", alpha=0.9) +
+  geom_ribbon(aes(x = date, ymin=R_Cori_q025, ymax=R_Cori_q975), fill="steelblue", alpha=0.6) +
+  geom_line(aes(x = date, y = R_Cori, color = "Cori"), size = 1) + 
+  geom_line(aes(x=date, y=R_WT, color="WT"), size=1) +
+  geom_ribbon(aes(x = date, ymin=R_WT_q025, ymax=R_WT_q975), fill="red", alpha=0.5) +
+  geom_hline(yintercept=1, color="black") +
+  geom_vline(xintercept=as.Date("2020-02-06"), color="steelblue", linetype="dashed", size=0.6) +
+  geom_vline(xintercept=as.Date("2020-01-29"), color="red", linetype="dashed", size=0.6) +
+  scale_x_date(breaks=seq(as.Date("2019-12-20"), as.Date("2020-03-08"), by=5),
+               limits=c(as.Date("2019-12-20"), as.Date("2020-03-08")),
+               date_labels="%b %d",
+               date_minor_breaks="1 day",
+               sec.axis=sec_axis(~., breaks=as.Date(c("2020-01-01", "2020-01-10", "2020-01-23", "2020-02-02", "2020-02-17")),
+                                 labels=c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5"))) +
+  scale_y_continuous(limits=c(0,5)) +
+  labs(x="Date", y="R") +
+  theme_bw() +
+  theme(axis.text.x.top=element_text(hjust=0, size=12),
+        axis.title=element_text(size=13)) + 
+  scale_colour_manual("Method",
+                      breaks=c("Cori","WT"),
+                      values=c("steelblue","red")) 
+
+ggarrange(fig.inc, fig.R, nrow = 2, common.legend = T, legend = "bottom", align = "v")
+```
+
+```{r, eval = F}
+ec4 <- ec2
+
+
+## Shifting Cori/Pan estimate by the incubation period 
+inc.period <- 5
+
+shift <- function(ec, n){
+  c(ec[-(seq(n))], rep(NA, n))
+}
+
+ec4$cshift <- shift(ec4$R_Cori, inc.period)
+ec4$cshift_025 <- shift(ec4$R_Cori_q025, inc.period)
+ec4$cshift_975 <- shift(ec4$R_Cori_q975, inc.period)
+
+ec4[which(ec4$date<"2020-01-01"), c("R_Cori", "R_Cori_q025", "R_Cori_q975", "R_WT", "R_WT_q025", "R_WT_q975", "cshift", "cshift_025", "cshift_975")] <- NA
+
+
+## plot of all 3 versions now 
+fig.shift.added <- ec4 %>% ggplot() +
+  geom_vline(xintercept=as.Date(c("2020-01-01", "2020-01-10", "2020-01-23", "2020-02-02", "2020-02-17")),
+             color="grey30", alpha=0.9) +
+  geom_line(aes(x = date, y = R_Cori, color = "Cori"), size = 1) + 
+  geom_line(aes(x=date, y=R_WT, color="WT"), size=1) +
+  geom_line(aes(x = date, y = cshift, color = "Cori_shift"), size = 1) +
+  geom_ribbon(aes(x = date, ymin=R_Cori_q025, ymax=R_Cori_q975), fill="steelblue", alpha=0.5) +
+  geom_ribbon(aes(x = date, ymin=R_WT_q025, ymax=R_WT_q975), fill="red", alpha=0.5) +
+  geom_ribbon(aes(x = date, ymin = cshift_025, ymax = cshift_975), fill = "midnightblue", alpha = 0.3) + 
+  geom_hline(yintercept=1, color="black") +
+  geom_vline(xintercept=as.Date("2020-02-06"), color="steelblue", linetype="dashed", size=0.6) +
+  geom_vline(xintercept=as.Date("2020-01-29"), color="red", linetype="dashed", size=0.6) +
+  geom_vline(xintercept=as.Date("2020-02-01"), color = "midnightblue", linetype = "dashed", size = 0.6) + 
+  scale_x_date(breaks=seq(as.Date("2019-12-20"), as.Date("2020-03-08"), by=5),
+               limits=c(as.Date("2019-12-20"), as.Date("2020-03-08")),
+               date_labels="%b %d",
+               date_minor_breaks="1 day",
+               sec.axis=sec_axis(~., breaks=as.Date(c("2020-01-01", "2020-01-10", "2020-01-23", "2020-02-02", "2020-02-17")),
+                                 labels=c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5"))) +
+  scale_y_continuous(limits=c(0,5)) +
+  labs(x="Date", y="R") +
+  theme_bw() +
+  theme(axis.text.x.top=element_text(hjust=0, size=12),
+        axis.title=element_text(size=13)) + 
+  scale_colour_manual("Method",
+                      breaks=c("Cori","WT", "Cori_shift"),
+                      values=c("steelblue","midnightblue", "red")) 
+  
+ggarrange(fig.inc, fig.shift.added, nrow = 2, common.legend = T, legend = "bottom", align = "v")
+```
